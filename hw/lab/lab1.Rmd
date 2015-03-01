@@ -1,7 +1,7 @@
 Lab 1
 ========================================================
 1. Summary for graph in Part A
---
+-------------------------------
 ### 1.1 Histogram
 ```{r}
 attach(faithful)
@@ -22,11 +22,11 @@ abline(lm(waiting ~ eruptions), col = "blue")
 
 ### 1.3 Boxplot
 ```{r}
-weather <- read.table("/Users/yangzhou/STAT/stat828/hw/data/weather.txt", 
+weather <- read.table(paste0(path.expand("~"),"/STAT/stat828/hw/data/weather.txt"),
                       header = TRUE)
 attach(weather)
 weather$monthF <- factor(month)
-plot(weather$monthF, upper, xlab = "Month", ylab = "Temperature", 
+plot(weather$monthF, upper, xlab = "Month", ylab = "Temperature",
      main = "Boxplot of upper temperatures for each month")
 ```
 
@@ -34,9 +34,9 @@ plot(weather$monthF, upper, xlab = "Month", ylab = "Temperature",
 
 ### 1.4 colorful boxplot
 ```{r}
-boxplot(upper ~ monthF, data = weather, xlab = "Month", ylab = 'Temperature', 
+boxplot(upper ~ monthF, data = weather, xlab = "Month", ylab = 'Temperature',
         main = "Box plot of upper temperatures for each month",
-        boxwex = 0.25, boxfill = "lightblue", pch = 20, xlim = c(0,12), 
+        boxwex = 0.25, boxfill = "lightblue", pch = 20, xlim = c(0,12),
         ylim = c(-10, 40))
 legend(1, 40, c("Upper Temperatures"), fill = c("lightblue"))
 ```
