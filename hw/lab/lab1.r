@@ -39,6 +39,35 @@ pairs(weather[-c(5,6)], main = "Scatter Plot Matrix of Weather Data", panel = pa
 ## search attached objects
 search()
 
+## workspace mangement
+## save & load Objects
+save(weather, file = "lab1.weather.RData")
+rm(list = ls())
+attach(paste0(getwd(),"/lab1.weather.RData"))
+ls(pos = 2)
+load(file = "lab1.weather.RData")
+ls(list = ls(all = TRUE)) # to display hidden object like '.XXX'
+
+xy <- matrix(rnorm(60000), nrow = 600)
+xy.rowrange <- apply(xy, MARGIN = 1, FUN = range) # MARGIN means the axis apply to
+save(xy, xy.rowrange, file = "xy.RData")
+
+save.image() # save the whole workspace
+
+## data input and output
+unique(count.fields("../data/weather.txt")) # check the number of columns of a file
+write.table(weather, file = "weather2.txt", sep = '|', quote = FALSE)
+
+## database connection
+
+## string functions
+substring("abcdefg", 5,7)
+nchar("abcde")
+strsplit("abc|def|ggg", split = '|')
+
+## anonymous functions
+#sapply(weather, FUN = function(x)
+
 ## working with date and time
 dd <- as.Date(c("2015-02-28", "2014-02-28"))
 diff(dd)
@@ -53,4 +82,9 @@ months(dd)
 quarters(dd)
 
 format(dd, format = "%b %d %Y")
-format(dd, format = "%a %b %d %Y")
+format(dd, format = "%a %A %b %B %d %m %y %Y")
+
+startOfMonth <- seq(from = as.Date("2015-03-01"), by = "1 month", length = 24)
+startOfMonth
+
+
