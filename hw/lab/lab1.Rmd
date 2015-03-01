@@ -1,5 +1,8 @@
+
 Lab 1
 ========================================================
+*Yang Zhou 43413986*
+
 1. Summary for graph in Part A
 -------------------------------
 ### 1.1 Histogram
@@ -49,3 +52,75 @@ pairs(weather[-c(5,6)], main = "Scatter Plot Matrix of Weather Data", panel = pa
 ```
 
 `pairs()` outputs the scatterplots matrix. `panel = panel.smooth()` adds a smooth function to each of the panels. `weather[-c(5,6)]` removes the 5th and 6th column of weather dataset.
+
+2. What I have done of Maindonald and Braun Advanced.R script
+-----------------------------------------
+```{r}
+## search attached objects
+search()
+
+## workspace mangement
+## save & load Objects
+save(weather, file = "lab1.weather.RData")
+rm(list = ls())
+attach(paste0(getwd(),"/lab1.weather.RData"))
+ls(pos = 2)
+load(file = "lab1.weather.RData")
+ls(all = TRUE) # to display hidden object like '.XXX'
+
+xy <- matrix(rnorm(60000), nrow = 600)
+xy.rowrange <- apply(xy, MARGIN = 1, FUN = range) # MARGIN means the axis apply to
+save(xy, xy.rowrange, file = "xy.RData")
+
+save.image() # save the whole workspace
+
+## data input and output
+unique(count.fields("../data/weather.txt")) # check the number of columns of a file
+write.table(weather, file = "weather2.txt", sep = '|', quote = FALSE)
+
+## database connection
+
+## string functions
+substring("abcdefg", 5,7)
+nchar("abcde")
+strsplit("abc|def|ggg", split = '|')
+
+## anonymous functions
+#sapply(weather, FUN = function(x)
+
+## working with date and time
+dd <- as.Date(c("2015-02-28", "2014-02-28"))
+diff(dd)
+dd <- as.Date(c("2015-02-28", "2015-02-29"))
+diff(dd)
+
+as.Date("1/1/1999", format = "%d/%m/%Y")
+
+julian(dd)
+weekdays(dd)
+months(dd)
+quarters(dd)
+
+format(dd, format = "%b %d %Y")
+format(dd, format = "%a %A %b %B %d %m %y %Y")
+
+startOfMonth <- seq(from = as.Date("2015-03-01"), by = "1 month", length = 24)
+startOfMonth
+```
+
+3 Two most important things identified from two-crows book
+----------------------------------------------------------
+### Hierarchy of choices
+In the process of using Data mining to solve business problem, the different aspects of data mining might be confusing, so a hierarchy of decisions need to be made before start.
+
+1. Business goal. the ultimate purpose should be clearly defined. Define the project scope.
+2. Type of prediction. Classification or Regression.
+3. Model type. might need to try different algorithms.
+4. Product. Different products might have different implementations of the same algorithm, which can affect operational performance.
+
+### Data preparation
+Data preperation steps may take away from 50% to 90% of the time and efforts of the entire knowledge discovery process. So plan ahead, colloect data preperation tool knowledge and routines. Use dedicated DBMS(rather than sharing the same data warehouse environment). Try to write scripts to automate the process and make the process iterable. Avoid GIGO, good model needs good data.
+
+4. Would you consider CRISP-DM way of report for your statistical report
+------------------------------------------------------------------------
+In my opinion, CRISP-DM is very important as it provides the skeleton of data mining process. Data mining is a complex process, a priciple guideline can lead the project to follow current best practice and walk around the common pit-falls, which means efficiency and less risk. It also makes it easier to initiate a DM project. As a beginner of DM, I hope learning to use CRISP-DM in my statistical report can quickly bring me up-to-date to the industrial level. And since this is major process adopted, it will be extremely helpful when I start working together with other experienced professionals in the DM industry.
