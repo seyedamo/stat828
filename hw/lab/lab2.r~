@@ -1,0 +1,6 @@
+
+asx <- read.csv("../data/ASX_Jan07.csv")
+sample <- head(asx)
+gsub('\240', '', sample[,2], fixed=TRUE)
+
+

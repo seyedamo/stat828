@@ -1,0 +1,54 @@
+---
+title: "lab2"
+output: html_document
+---
+
+1. ASX data set
+---
+|variable|missing observation count|
+|-|-|
+|Risk Rank|15|
+|Return on Equity|20|
+|Earning stability|50|
+|Growth Rank|50|
+|P.E.Growth Ratio|245|
+
+Using missing data package Amelia to do a multiple imputation and plot the histogram of original Growth Rank and two imputated Growth Rank. We can see missing data are filled.
+
+```{r}
+library(Amelia)
+asx <- read.csv("/Users/yangzhou/STAT/stat828/hw/data/ASX_Jan07_UTF8.csv")
+asx$Growth.Rank[asx$Growth.Rank < 0] <- NA
+asx$Risk.Rank[asx$Risk.Rank < 0] <- NA
+asx$ROEquity <- as.numeric(sub('%','',as.character(asx$Return.on.Equity)))
+asx$EarningsS <- as.numeric(sub('%','', as.character(asx$Earnings.stability)))
+asx$PEGrowthRatio <- as.numeric(as.character(asx$P.E.Growth.ratio))
+
+a.out <- amelia(asx, m = 2, idvars = c("ASXCode","Company.Name","Industry","P.E.Growth.ratio","Earnings.stability","Return.on.Equity"))
+asx.impu.1 <- a.out$imputation[[1]]
+asx.impu.2 <- a.out$imputation[[2]]
+
+par(mfrow = c(1,3))
+with(asx, hist(Growth.Rank))
+with(asx.impu.1, hist(Growth.Rank))
+with(asx.impu.2, hist(Growth.Rank))
+```
+
+2. Barnett & Lewis Ch1
+-----
++ Missing data matrix and missing data pattern
++ mechanisms lead to missing data
++ missing completely at random, missing at random, missing not at random
+
+3. Little & Rubin Ch1
+---
++ outlier - a set of data to be an observation(or subset of observations) which appears to be inconsistent with the remainder of that set of data
++ what really matters is whether or not some observations are genuine members of the main population. If they are not, but are contaminants(arising from some other distributions), they may frustrate attempts to draw inference about the original population.
+
+4. z-score normalization function
+```{r}
+norm.z.score <- function(x) (x - mean(x, na.rm = TRUE)) / sd(x, na.rm = TRUE)
+asx$Price_z <- norm.z.score(asx$Price)
+summary(asx$Price)
+summary(asx$Price_z)
+```
