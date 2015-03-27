@@ -1,0 +1,61 @@
+library(ggplot2)
+library(data.table)
+library(arules)
+
+dt <- read.csv("../data/ColesData.csv", header = TRUE, stringsAsFactors = FALSE)
+#dt <- fread("../data/ColesData.csv")
+dt <- data.table(dt)
+dim(dt)
+names(dt)
+str(dt)
+summary(dt)
+
+# creating a back up before data preperation
+dt_bk <- data.table(dt)
+
+# factorization
+dt$pmethod <- factor(dt$pmethod, levels = c(1,2,3,4), labels = c("cash", "creditCard", "eftpos", "other"))
+levels(dt$pmethod)
+
+dt$sex <- factor(dt$sex, ordered = TRUE, levels = c(1,2), labels = c("male","female"))
+levels(dt$sex)
+
+dt$homeown <- factor(dt$homeown, levels = c(1,2,3), labels = c("Yes", "No", "Unknown"))
+
+dt$PostCode <- factor(dt$PostCode)
+
+dt$nchildren <- factor(dt$nchildren, ordered = TRUE)
+
+## factorization of products
+dt[,10:43] <- lapply(dt[, 10:43], as.factor)
+dt[,10:43] <- lapply(dt[, 10:43], FUN = function(x) factor(x, levels = c(0,1), labels = c("No", "Yes")))
+
+ggplot(dt, aes(fruit)) + geom_bar()
+
+# missing value
+# age, PostCode
+summary(dt$PostCode)
+unique(dt$PostCode[nchar(dt_bk$PostCode) != 4])
+dt$PostCode[nchar(dt_bk$PostCode) != 4] <- NA
+
+# graph displays
+ggplot(data = dt, aes(sex)) + geom_bar()
+
+ggplot(data = dt, aes(PostCode)) + geom_bar()
+
+ggplot(data = dt, aes(homeown)) + geom_bar()
+
+ggplot(data = dt, aes(nchildren)) + geom_bar()
+
+ggplot(data = dt, aes(pmethod)) + geom_bar()
+
+
+# Apriori
+
+items_only <- dt[, 10:43]
+str(items_only)
+
+rules <- apriori(items_only)
+rules <- apriori(items_only, parameter = list(minlen = 2, supp = 0.005, conf = 0.8))
+rules <- apriori(items_only, parameter = list(minlen = 2, supp = 0.1, conf = 0.8))
+trans <- as(items_only, "transations") ?
