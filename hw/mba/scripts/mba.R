@@ -1,6 +1,8 @@
 library(ggplot2)
 library(data.table)
 library(arules)
+library(reshape2)
+library(scales)
 
 dt <- read.csv("../data/ColesData.csv", header = TRUE, stringsAsFactors = FALSE)
 #dt <- fread("../data/ColesData.csv")
@@ -11,7 +13,7 @@ str(dt)
 summary(dt)
 
 # creating a back up before data preperation
-dt_bk <- data.table(dt)
+##dt_bk <- data.table(dt)
 
 # factorization
 dt$pmethod <- factor(dt$pmethod, levels = c(1,2,3,4), labels = c("cash", "creditCard", "eftpos", "other"))
@@ -27,18 +29,55 @@ dt$PostCode <- factor(dt$PostCode)
 dt$nchildren <- factor(dt$nchildren, ordered = TRUE)
 
 ## factorization of products
-dt[,10:43] <- lapply(dt[, 10:43], as.factor)
-dt[,10:43] <- lapply(dt[, 10:43], FUN = function(x) factor(x, levels = c(0,1), labels = c("No", "Yes")))
+## dt[,10:43] <- lapply(dt[, 10:43], as.factor)
+## dt[,10:43] <- lapply(dt[, 10:43], FUN = function(x) factor(x, levels = c(0,1), labels = c("No", "Yes")))
 
 ggplot(dt, aes(fruit)) + geom_bar()
 
+dim(dt)
+
+unique(dt$fruit)
+dt <- dt[fruit == '0' | fruit == '1']
+dt[, fruit := as.integer(fruit)]
+
 # missing value
-# age, PostCode
+# age, PostCode, cereal
 summary(dt$PostCode)
 unique(dt$PostCode[nchar(dt_bk$PostCode) != 4])
 dt$PostCode[nchar(dt_bk$PostCode) != 4] <- NA
 
-# graph displays
+
+dt[banana == 1 & fruit != 1, .N]
+dt[banana == 1 & fruit == 1, .N]
+
+## New demographics features
+
+names(dt)
+quantile(dt$income)
+q <- quantile(dt$income, probs = c(0, 0.3, 0.7, 1))
+summary(dt$income)
+
+dt[, income.low := as.integer(income < q[2])]
+##dt[, a := unlist(lapply(income, function(x) if (x < 50000) 1 else 0))]
+ggplot(data = dt, aes(factor(income.low))) + geom_bar()
+
+## dt[, income.low := as.integer(income < q[2])]
+## dt[, list(income.low = as.integer(income < q[2]), income.high = as.integer(income > q[3]))]
+## dt[, c("income.low", "income.high") := list(as.integer(income < q[2]), as.integer(income > q[3]))]
+
+dt[, c("income.low", "income.high", "income.medium") := list(as.integer(income < q[2]), as.integer(income > q[3]), as.integer(income >=q[2] & income <=q[3]))]
+
+dt[, list(income.low, income.medium,income.high)]
+
+dt[, income.level := cut(income, breaks = c(q[1],q[2],q[3],q[4]), labels = c("low","medium","high"))]
+
+## Category
+## why is banana seperated from fruit?
+
+## descriptive analysis
+## graph displays
+
+names(dt)
 ggplot(data = dt, aes(sex)) + geom_bar()
 
 ggplot(data = dt, aes(PostCode)) + geom_bar()
@@ -49,16 +88,57 @@ ggplot(data = dt, aes(nchildren)) + geom_bar()
 
 ggplot(data = dt, aes(pmethod)) + geom_bar()
 
+ggplot(data = dt, aes(Value)) + geom_histogram()
 
-# Apriori
+ggplot(data = dt, aes(income, Value)) + geom_point(alpha = 0.01)
 
-items_only <- dt[, 10:43]
+ggplot(data = dt, aes(x = income.level, y = Value)) + geom_boxplot()
+
+ggplot(data = dt, aes(x = factor(1), y = income)) + geom_boxplot() + scale_y_continuous(label = comma)
+
+ggplot(data = dt, aes(income)) + geom_histogram() + scale_x_continuous(label = comma)
+
+dt[, lapply(.SD, sum), .SD = c("fruit","freshmeat", "dairy")]
+
+bar <- dt[, lapply(.SD, function(x) sum(x,na.rm=TRUE)), .SD = c(10:46)]
+
+bar <- melt(bar)
+
+class(bar)
+setnames(bar, c("product","count"))
+
+bar
+
+ggplot(data = bar, aes(x = reorder(factor(product), -count), y = count) ) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggplot(dt, aes(pmethod, Value)) + geom_boxplot()
+
+
+## Markest basket analysis
+
+## Apriori
+
+items_only <- dt[, 10:46, with = FALSE]
+items_only <- data.matrix(na.omit(items_only))
+
+summary(items_only)
+
+?na.omit
+
 str(items_only)
 
 trans <- as(items_only, "transactions")
 ?transactions
 
-rules <- apriori(items_only)
-rules <- apriori(items_only, parameter = list(minlen = 2, supp = 0.005, conf = 0.8))
-rules <- apriori(items_only, parameter = list(minlen = 2, supp = 0.1, conf = 0.8))
-trans <- as(items_only, "transations") ?
+trans
+
+inspect(trans[1:10])
+
+rules <- apriori(items_only, parameter = list(minlen = 2, supp = 0.1, conf = 0.8, maxlen = 5))
+summary(rules)
+
+rules.sorted <- sort(rules, by = "lift")
+rules.sorted <- sort(rules, by = "confidence")
+
+inspect(rules.sorted[1:10])
+
