@@ -3,6 +3,9 @@ library(data.table)
 library(arules)
 library(reshape2)
 library(scales)
+library(cluster)
+library(fastcluster)
+
 
 dt <- read.csv("../data/ColesData.csv", header = TRUE, stringsAsFactors = FALSE)
 #dt <- fread("../data/ColesData.csv")
@@ -50,6 +53,8 @@ dt$PostCode[nchar(dt_bk$PostCode) != 4] <- NA
 dt[banana == 1 & fruit != 1, .N]
 dt[banana == 1 & fruit == 1, .N]
 
+
+## New features
 ## New demographics features
 
 names(dt)
@@ -73,6 +78,23 @@ dt[, income.level := cut(income, breaks = c(q[1],q[2],q[3],q[4]), labels = c("lo
 
 ## Category
 ## why is banana seperated from fruit?
+## you can mark fruits to include banana
+
+## count of distinct items in one order
+## to answer question like most common item in one-item order etc.
+dt[, item.count :=]
+
+
+## Cluster analysis
+
+cluster <- na.omit(dt[,3:7, with = FALSE])
+hc <- hclust(d = daisy(cluster), method = "ave")
+
+cluster.sub <- cluster[1:1000]
+d <- daisy(cluster.sub)
+hc <- hclust(d = d, method = "ave")
+plot(hc, labels = FALSE, hang = -1)
+## Markest basket analysis
 
 ## descriptive analysis
 ## graph displays
@@ -113,8 +135,14 @@ ggplot(data = bar, aes(x = reorder(factor(product), -count), y = count) ) + geom
 
 ggplot(dt, aes(pmethod, Value)) + geom_boxplot()
 
+## Unique number of items per order, avg() ?
 
-## Markest basket analysis
+## scatter plot (bubble plot) transaction value against number of items
+
+
+## moisac display for several categorical variables
+
+## Trellis display combining up to 8 variables in one plot
 
 ## Apriori
 
