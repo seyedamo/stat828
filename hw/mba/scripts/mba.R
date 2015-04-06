@@ -40,15 +40,16 @@ ggplot(dt, aes(fruit)) + geom_bar()
 dim(dt)
 
 unique(dt$fruit)
+dt[, .N, by = fruit][order(-N)]
 dt <- dt[fruit == '0' | fruit == '1']
 dt[, fruit := as.integer(fruit)]
 
 # missing value
 # age, PostCode, cereal
 summary(dt$PostCode)
-unique(dt$PostCode[nchar(dt_bk$PostCode) != 4])
+#unique(dt$PostCode[nchar(dt_bk$PostCode) != 4])
 dt$PostCode[nchar(dt_bk$PostCode) != 4] <- NA
-
+dt[, list(len = nchar(PostCode))][, .N, by = len][order(len)]
 
 dt[banana == 1 & fruit != 1, .N]
 dt[banana == 1 & fruit == 1, .N]
@@ -99,18 +100,38 @@ plot(hc, labels = FALSE, hang = -1)
 ## descriptive analysis
 ## graph displays
 
+n = dim(dt)[1]
+
 names(dt)
-ggplot(data = dt, aes(sex)) + geom_bar()
+ggplot(data = dt, aes(sex)) + geom_bar() + ggtitle("bar chart of sex")
+table(dt$sex)
+table(dt$sex) / n
 
-ggplot(data = dt, aes(PostCode)) + geom_bar()
+ggplot(data = dt, aes(PostCode)) + geom_bar() + ggtitle("bar chart of postcode")
 
-ggplot(data = dt, aes(homeown)) + geom_bar()
+ggplot(data = dt, aes(homeown)) + geom_bar() + ggtitle("bar chart of homeown")
+table(dt$homeown)
+table(dt$homeown) / n
 
-ggplot(data = dt, aes(nchildren)) + geom_bar()
+ggplot(data = dt, aes(nchildren)) + geom_bar() + ggtitle("bar chart of nchildren")
+table(dt$nchildren)
+table(dt$nchildren) / n
 
-ggplot(data = dt, aes(pmethod)) + geom_bar()
+ggplot(data = dt, aes(pmethod)) + geom_bar() + ggtitle("bar chart of pmethod")
+table(dt$pmethod)
+table(dt$pmethod) / n
 
-ggplot(data = dt, aes(Value)) + geom_histogram()
+ggplot(data = dt, aes(Value)) + geom_histogram(binwidth = 20) + ggtitle("histogram of Value")
+ggplot(data = dt, aes(Value)) + geom_histogram(binwidth = 50) + ggtitle("histogram of Value")
+summary(dt$Value)
+
+ggplot(data = dt, aes(factor(1), Value)) + geom_boxplot() + ggtitle("Value boxplot") + xlab(NULL) + ylab("Value")
+
+ggplot(data = dt, aes(income)) + geom_histogram(binwidth = 5000) + ggtitle("histogram of income") + scale_x_continuous(label = comma)
+summary(dt$income)
+
+ggplot(data = dt, aes(factor(1), income)) + geom_boxplot() + scale_y_continuous(label = comma) + xlab(NULL) + ylab("income") + ggtitle("income boxplot")
+ggplot(data = dt[income < 150000], aes(income)) + geom_histogram(binwidth = 5000) + ggtitle("histogram of income without the outlier")
 
 ggplot(data = dt, aes(income, Value)) + geom_point(alpha = 0.01)
 
