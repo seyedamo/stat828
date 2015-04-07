@@ -87,10 +87,26 @@ dt.cluster[income > 150000, income]
 ## New features
 ## New demographics features
 ## income level
-quantile(dt$income)
+quantile(dt.cluster$income)
 ## 0 - 30% low, 30% - 70% medium, 70% - 100% high for cluster analysis
-q <- quantile(dt$income, probs = c(0, 0.3, 0.7, 1))
-dt.cluster[, income.level := cut(income, breaks = c(q[1],q[2],q[3],q[4]), labels = c("low","medium","high"))]
+q <- quantile(dt.cluster$income, probs = c(0, 0.3, 0.7, 1))
+dt.cluster[, income.level := cut(income, breaks = c(q[1],q[2],q[3],q[4]), labels = c("low","medium","high"), include.lowest = TRUE, ordered_result = TRUE)]
+dt.cluster[, income:= NULL]
+
+## Value.level
+quantile(dt.cluster$Value)
+q <- quantile(dt.cluster$Value, probs = c(0, 0.3, 0.7, 1))
+dt.cluster[, value.level := cut(Value, breaks = c(q[1],q[2],q[3],q[4]), labels = c("low","medium","high"), include.lowest = TRUE, ordered_result = TRUE)]
+dt.cluster[, Value := NULL]
+
+## Value not useful?
+
+
+## Age.group
+quantile(dt.cluster$age)
+q <- quantile(dt.cluster$age, probs = c(0, 0.3, 0.7, 1))
+dt.cluster[, age.level := cut(age, breaks = c(q[1],q[2],q[3],q[4]), labels = c("low","medium","high"), include.lowest = TRUE, ordered_result = TRUE)]
+dt.cluster[, age := NULL]
 
 ## binary indicators for Arules
 dt.arules[, c("income.low", "income.high", "income.medium") := list(as.integer(income < q[2]), as.integer(income > q[3]), as.integer(income >=q[2] & income <=q[3]))]
@@ -103,40 +119,47 @@ ggplot(data = dt.cluster, aes(income.level)) + geom_bar()
 
 ## Cluster analysis
 ## hierarchy cluster is used because the mixed categorical and continuous variables nature of the dataset
-d <- daisy(dt.cluster)
-hc <- hclust(d = d, method = "ave")
 
-cluster.sub <- dt.cluster[1:10000]
-d <- daisy(cluster.sub)
-hc <- hclust(d = d, method = "ave")
+## dedup and distance
+dt.cluster
+dt.cluster.dedup <- unique(dt.cluster)
+dim(dt.cluster.dedup)
+d <- daisy(dt.cluster.dedup, metric = "euclidean")
+hc.single <- hclust(d = d, method = "single")
+hc.complete <- hclust(d = d, method = "complete")
+hc.average <- hclust(d = d, method = "average")
 
-plot(hc, labels = FALSE, hang = -1)
+plot(hc.single, labels = FALSE, hang = -1)
+plot(hc.complete, labels = FALSE, hang = -1)
+plot(hc.average, labels = FALSE, hang = -1)
 
-memb <- cutree(hc, k = c(2:10))
+memb.single <- cutree(hc.single, k = c(2:10))
+memb.complete <- cutree(hc.complete, k = c(2:10))
+memb.average <- cutree(hc.average, k = c(2:10))
 
 head(memb)
 
-cluster.sub[, `:=`(group2 = memb[,1], group3 = memb[,2], group4 = memb[,3], group5 = memb[,4], group10 = memb[,9])]
+dt.cluster.dedup[, `:=`(group2 = memb[,1], group3 = memb[,2], group4 = memb[,3], group5 = memb[,4], group10 = memb[,9])]
 
-names(cluster.sub)
-cluster.sub[, lapply(.SD, mean), by = group2, .SD = c(1:8)]
-cluster.sub[, lapply(.SD, mean), by = group3, .SD = c(1:8)]
-cluster.sub[, lapply(.SD, mean), by = group4, .SD = c(1:8)]
-cluster.sub[, lapply(.SD, mean), by = group5, .SD = c(1:8)]
-cluster.sub[, lapply(.SD, mean), by = group10, .SD = c(1:8)]
+names(dt.cluster.dedup)
+dt.cluster.dedup[, lapply(.SD, mean), by = group2, .SD = c(1:6)]
+dt.cluster.dedup[, lapply(.SD, mean), by = group3, .SD = c(1:6)]
+dt.cluster.dedup[, lapply(.SD, mean), by = group4, .SD = c(1:6)]
+dt.cluster.dedup[, lapply(.SD, mean), by = group5, .SD = c(1:6)]
+dt.cluster.dedup[, lapply(.SD, mean), by = group10, .SD = c(1:6)]
 
 ## graphics
-names(cluster.sub)
-ggplot(cluster.sub, aes(income.level)) + geom_bar(aes(fill = factor(group10)), alpha = 0.5)
-ggplot(cluster.sub, aes(sex)) + geom_bar(aes(fill = factor(group10)), alpha = 0.5)
-ggplot(cluster.sub, aes(pmethod)) + geom_bar(aes(fill = factor(group10)), alpha = 0.5)
-ggplot(cluster.sub, aes(homeown)) + geom_bar(aes(fill = factor(group10)), alpha = 0.5)
-ggplot(cluster.sub, aes(homeown)) + geom_bar(aes(fill = factor(group10)), alpha = 0.5)
-ggplot(cluster.sub, aes(nchildren)) + geom_bar(aes(fill = factor(group10)), alpha = 0.5)
+names(dt.cluster.dedup)
+ggplot(dt.cluster.dedup, aes(income.level)) + geom_bar(aes(fill = ordered(group10)), alpha = 0.5)
+ggplot(dt.cluster.dedup, aes(sex)) + geom_bar(aes(fill = ordered(group10)), alpha = 0.5)
+ggplot(dt.cluster.dedup, aes(pmethod)) + geom_bar(aes(fill = ordered(group10)), alpha = 0.5)
+ggplot(dt.cluster.dedup, aes(homeown)) + geom_bar(aes(fill = ordered(group10)), alpha = 0.5)
+ggplot(dt.cluster.dedup, aes(homeown)) + geom_bar(aes(fill = ordered(group10)), alpha = 0.5)
+ggplot(dt.cluster.dedup, aes(nchildren)) + geom_bar(aes(fill = ordered(group10)), alpha = 0.5)
 
-ggplot(cluster.sub, aes(factor(group5))) + geom_bar(aes(fill = pmethod))
-ggplot(cluster.sub, aes(factor(group5))) + geom_bar(aes(fill = income.level))
-ggplot(cluster.sub, aes(factor(group5))) + geom_bar(aes(fill = sex))
+ggplot(dt.cluster.dedup, aes(ordered(group5))) + geom_bar(aes(fill = pmethod))
+ggplot(dt.cluster.dedup, aes(ordered(group5))) + geom_bar(aes(fill = income.level))
+ggplot(dt.cluster.dedup, aes(ordered(group5))) + geom_bar(aes(fill = sex))
 
 ## Examine clusters to determine characteristics unique to that cluster.
 ## Examine fields across clusters to determine how values are distributed among clusters.
