@@ -103,6 +103,7 @@ dt[, num.kid := cut(nchildren, breaks = c(0, 0.9, 2.1, 50), labels = c("none", "
 dt[, mean(nchildren), by = num.kid]
 unique(dt[, list(num.kid, nchildren)])[order(nchildren)]
 summary(dt$num.kid)
+ggplot(dt, aes(num.kid)) + geom_bar()
 
 ## indicator
 dt[, no.kid := as.integer(nchildren == 0)]
@@ -140,10 +141,12 @@ quantile(dt$income)
 ## 0 - 30% low, 30% - 70% medium, 70% - 100% high for cluster analysis
 q <- quantile(dt$income, probs = c(0, 0.3, 0.7, 1))
 dt[, income.level := cut(income, breaks = c(q[1],q[2],q[3],q[4]), labels = c("low","medium","high"), include.lowest = TRUE, ordered_result = TRUE)]
-ggplot(dt, aes(income.level)) + geom_bar()
+ggplot(dt, aes(income.level)) + geom_bar() + ggtitle("barchart of income.level")
 ## binary indicators for Arules
 dt[, c("income.low", "income.high", "income.medium") := list(as.integer(income < q[2]), as.integer(income > q[3]), as.integer(income >=q[2] & income <=q[3]))]
 dt[, .N, by = income.low]
+
+
 
 ## fruit, correction
 ggplot(dt, aes(fruit)) + geom_bar()
@@ -173,19 +176,20 @@ dt[income > 150000, income]
 
 ## payment method vs value
 dt[, mean(Value), by = pmethod]
-ggplot(dt, aes(pmethod, Value)) + geom_boxplot()
+ggplot(dt, aes(pmethod, Value)) + geom_boxplot() + ggtitle("payment method vs amount")
 
 ## income vs value
 dt[, mean(Value), by = income.level]
-ggplot(dt, aes(income.level, Value)) + geom_boxplot()
+ggplot(dt, aes(income.level, Value)) + geom_boxplot() + ggtitle("income level vs amount")
 
 ## age vs value
 dt[, mean(Value), by = age.group]
-ggplot(dt, aes(age.group, Value)) + geom_boxplot()
+ggplot(dt, aes(age.group, Value)) + geom_boxplot() + ggtitle("age vs amount")
 
 ## nchild vs value
 dt[, mean(Value), by = nchildren]
-ggplot(dt, aes(ordered(nchildren), Value)) + geom_boxp()
+ggplot(dt, aes(ordered(nchildren), Value)) + geom_boxplot() + ggtitle("number of kids vs amount")
+ggplot(dt, aes(ordered(num.kid), Value)) + geom_boxplot() + ggtitle("number of kids groups vs amount") + xlab("kids groups")
 
 ## count of distinct items in one order
 tmp <- dt[,list(count = fruit+freshmeat+dairy+MozerallaCheese+cannedveg+cereal+frozenmeal+frozendessert+PizzaBase+TomatoSauce+frozen.fish+bread+milk+softdrink+fruitjuice+confectionery+fish+vegetables+icecream+energydrink+tea+coffee+laundryPowder+householCleaners+corn.chips+Frozen.yogurt+Chocolate+Olive.Oil+Baby.Food+Napies+banana+cat.food+dog.food+mince), Value]
@@ -193,10 +197,10 @@ tmp[, `:=`(order.num.per.count = .N, value.avg.per.count = mean(Value)), by = co
 tmp[, .N, by = count][order(-count)]
 
 ## 13 unique items per order
-tmp[, mean(count)]
+tmp[, list(mean(count), sd(count))]
 
 ## a normal shape distribution
-ggplot(tmp[, .N, by = count][order(-count)], aes(count, N)) + geom_bar(stat = "identity")
+ggplot(tmp[, .N, by = count][order(-count)], aes(count, N)) + geom_bar(stat = "identity") + ggtitle("bar chart of number of unique items per order")
 
 ## count vs value
 tmp[, .(value.avg = mean(Value)), by = count][order(count)]
@@ -217,7 +221,7 @@ ggplot(melt(tmp), aes(x = reorder(factor(variable), -value), y = value)) + geom_
 
 ## create copy for cluster analysis
 names(dt)
-dt.cluster <- dt[, .(pmethod, sex, homeown, num.kid, income.level, age.group)]
+dt.cluster <- dt[, list(pmethod, sex, homeown, num.kid, income.level, age.group)]
 
 ## Cluster analysis
 ## hierarchy cluster is used because the mixed categorical and continuous variables nature of the dataset
@@ -240,16 +244,16 @@ plot(hc.complete, labels = FALSE, hang = -1)
 plot(hc.average, labels = FALSE, hang = -1)
 
 memb.single <- cutree(hc.single, k = c(2:10))
-memb.complete <- cutree(hc.complete, k = c(2:10))
-memb.average <- cutree(hc.average, k = c(2:10))
+memb.complete <- cutree(hc.complete, k = c(2:6))
+memb.average <- cutree(hc.average, k = c(2:7))
 
 head(memb.complete)
 
 dt.cluster.dedup[, `:=`(group2 = memb.single[,1], group3 = memb.single[,2], group4 = memb.single[,3], group5 = memb.single[,4], group10 = memb.single[,9])]
 
-dt.cluster.dedup[, `:=`(group2 = memb.complete[,1], group3 = memb.complete[,2], group4 = memb.complete[,3], group5 = memb.complete[,4], group10 = memb.complete[,9])]
+dt.cluster.dedup[, `:=`(group2 = memb.complete[,1], group3 = memb.complete[,2], group4 = memb.complete[,3], group5 = memb.complete[,4], group6 = memb.complete[,5])]
 
-dt.cluster.dedup[, `:=`(group2 = memb.average[,1], group3 = memb.average[,2], group4 = memb.average[,3], group5 = memb.average[,4], group10 = memb.average[,9])]
+dt.cluster.dedup[, `:=`(group2 = memb.average[,1], group3 = memb.average[,2], group4 = memb.average[,3], group5 = memb.average[,4], group6 = memb.average[,5], group7 = memb.average[,6])]
 
 dim(dt.cluster)
 dt.cluster.group <- dt.cluster[dt.cluster.dedup]
@@ -259,7 +263,11 @@ dt.cluster.dedup[, lapply(.SD, mean), by = group2, .SD = c(1:6)]
 dt.cluster.dedup[, lapply(.SD, mean), by = group3, .SD = c(1:6)]
 dt.cluster.dedup[, lapply(.SD, mean), by = group4, .SD = c(1:6)]
 dt.cluster.dedup[, lapply(.SD, mean), by = group5, .SD = c(1:6)]
-dt.cluster.dedup[, lapply(.SD, mean), by = group10, .SD = c(1:6)]
+dt.cluster.dedup[, lapply(.SD, mean), by = group6, .SD = c(1:6)]
+dt.cluster.dedup[, lapply(.SD, mean), by = group7, .SD = c(1:6)]
+
+dt.cluster.dedup[, .N, by = group6]
+dt.cluster.dedup[, .N, by = group7]
 
 ## graphics
 names(dt.cluster.dedup)
@@ -283,7 +291,7 @@ ggplot(dt.cluster.dedup, aes(ordered(group5))) + geom_bar(aes(fill = sex))
 ## items only
 
 
-dt.items.only <-dt[, .(fruit, freshmeat, dairy, MozerallaCheese, cannedveg, cereal, frozenmeal, frozendessert, PizzaBase, TomatoSauce, frozen.fish, bread, milk, softdrink, fruitjuice, confectionery, fish, vegetables, icecream, energydrink, tea, coffee, laundryPowder, householCleaners, corn.chips, Frozen.yogurt, Chocolate, Olive.Oil, Baby.Food, Napies, banana, cat.food, dog.food, mince)]
+dt.items.only <-dt[, list(fruit, freshmeat, dairy, MozerallaCheese, cannedveg, cereal, frozenmeal, frozendessert, PizzaBase, TomatoSauce, frozen.fish, bread, milk, softdrink, fruitjuice, confectionery, fish, vegetables, icecream, energydrink, tea, coffee, laundryPowder, householCleaners, corn.chips, Frozen.yogurt, Chocolate, Olive.Oil, Baby.Food, Napies, banana, cat.food, dog.food, mince)]
 
 items.only <- data.matrix(dt.items.only)
 trans <- as(items.only, "transactions")
@@ -296,7 +304,7 @@ rules.items.only <- apriori(items.only, parameter = list(minlen = 2, supp = 0.14
 summary(rules.items.only)
 rules.sorted <- sort(rules.items.only, by = "lift")
 rules.sorted <- sort(rules.items.only, by = "confidence")
-inspect(rules.sorted[1:10])
+inspect(rules.sorted[1:50])
 
 ## items & demographics
 ## applicable when customer is identified i.e. online shopping, direct marketing
