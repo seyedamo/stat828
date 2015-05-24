@@ -1,0 +1,70 @@
+Executive Summary
+=========
+Cover type
+
+For this project, the object is to predict whether the cover type is
+type1 or type2. Binary classifer is considered.
+take two random sample from the whole dataset and build predictive
+model on the two sample datasets. Use cross-validation for model
+parameters tunning. Choices of model are: CARET, .... And the
+prediction outcome are compared to the
+
+It is identified that model A has the best outcome. And it is
+advisable to use model A to predict the forest cover type.
+
+Introduction
+=========
+wheher cover type can be predicted by data mining techniques and
+comparision of a range of different classification models to pick the
+best model based on AUC.
+
+Audience
+
+a
+dataset is graphically examed.
+
+
+
+Description
+=========
+Aspect
+"U" shape with two peaks around 50, 350 and one dig at around 250.
+Elevation
+Approximately normal with slightly left-skewness. mean at around 3000.
+Hillshade_3pm
+Approximately normal with mean around 145.
+Hillshade_9am
+strongly left-skewed with long tail.
+Hillshade_noon
+strongly left-skewed with long tail.
+Horizontal_Distance_to_Fire_Points
+right-skewed.
+Horizontal_Distance_to_Hydrology
+right-skewed with long tail.
+
+Horizontal_Distance_to_Roadways
+right-skewed.
+Slope
+right-skewed.
+Vertical_Distance_To_Hydrology
+right-skewed.
+
+Soil_Type
+percentage table? rank from most to least
+Most Soil Type is 29, least is..
+
+Wilderness_Area same as Above
+
+
+
+Methodology
+=========
+why classification?
+classfication models are used to predict categorical response
+variable.
+
+Model description, parameters chosen.
+
+
+
+
