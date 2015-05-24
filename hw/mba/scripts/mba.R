@@ -205,7 +205,7 @@ ggplot(tmp, aes(factor(count), value.avg.per.count)) + geom_bar(stat = "identity
 ## without quantity of items, it's hard to explain if this is due to the quantity
 
 ## scatter plot (bubble plot) transaction value against number of items
-ggplot(tmp, aes(factor(count), value.avg.per.count)) + geom_point(aes(size = order.num.per.count)) + xlab("unique items per order") + ylab("average amount per order($)") + ggtitle("avg amount vs unique items per order") + scale_size_continuous(range = c(1, 10))
+ggplot(tmp, aes(factor(count), value.avg.per.count)) + geom_point(aes(size = order.num.per.count)) + xlab("unique items per order") + ylab("average amount per order($)") + ggtitle("avg amount vs unique items per order") + scale_size_continuous(range = c(1, 8))
 
 ## to answer question like most common item in all orders does not considering quantity
 names(dt)
@@ -281,8 +281,6 @@ ggplot(dt.cluster.dedup, aes(ordered(group5))) + geom_bar(aes(fill = sex))
 ## Apriori
 
 ## items only
-
-
 dt.items.only <-dt[, .(fruit, freshmeat, dairy, MozerallaCheese, cannedveg, cereal, frozenmeal, frozendessert, PizzaBase, TomatoSauce, frozen.fish, bread, milk, softdrink, fruitjuice, confectionery, fish, vegetables, icecream, energydrink, tea, coffee, laundryPowder, householCleaners, corn.chips, Frozen.yogurt, Chocolate, Olive.Oil, Baby.Food, Napies, banana, cat.food, dog.food, mince)]
 
 items.only <- data.matrix(dt.items.only)
@@ -294,9 +292,13 @@ support.energy.drink
 
 rules.items.only <- apriori(items.only, parameter = list(minlen = 2, supp = 0.14, conf = 0.8, maxlen = 4))
 summary(rules.items.only)
+
+rules.sub <- subset(rules.items.only, lift > 1)
+summary(rules.sub)
+
 rules.sorted <- sort(rules.items.only, by = "lift")
 rules.sorted <- sort(rules.items.only, by = "confidence")
-inspect(rules.sorted[1:10])
+inspect(rules.sorted[1:50])
 
 ## items & demographics
 ## applicable when customer is identified i.e. online shopping, direct marketing
@@ -313,7 +315,7 @@ rules.item.demo <- apriori(item.demo, parameter = list(minlen = 2, supp = 0.14, 
 summary(rules.item.demo)
 rules.sorted <- sort(rules.item.demo, by = "lift")
 rules.sorted <- sort(rules.item.demo, by = "confidence")
-inspect(rules.sorted[1:10])
+inspect(rules.sorted[1:50])
 
 names(dt)
 
@@ -334,7 +336,7 @@ redundant <- colSums(subset.matrix, na.rm=T) >= 1
 which(redundant)
 # remove redundant rules
 rules.pruned <- rules.sorted[!redundant]
-inspect(rules.pruned)
+inspect(rules.pruned[1:50])
 
 plot(rules.sorted)
 
